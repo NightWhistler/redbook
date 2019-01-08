@@ -1,0 +1,47 @@
+#####
+# Generic files
+#####
+*.so
+*.log
+*.out
+*~
+*.swp
+*.DS_Store
+*.lock
+*.bak
+.testcontainers*
+
+#####
+# Build files and folders
+#####
+target/
+classes/
+out/
+bin/
+build/
+dist/
+.checkstyle
+.pmd
+
+#####
+# IntelliJ IDEA files and folders
+#####
+.idea/
+*.iwl
+*.ips
+*.iml
+
+###
+# Application configuration file.
+###
+application.conf
+.testcontainers*
+
+###
+# ENSIME stuff
+###
+.ensime
+.ensime_cache
+ensime.sbt
+.tags
+
