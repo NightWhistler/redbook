@@ -1,6 +1,6 @@
 package net.nightwhistler.redbook
 
-class RedbookModule {
+object RedbookModule {
 
   sealed trait List[+A]
   case object Nil extends List[Nothing]
@@ -41,6 +41,38 @@ class RedbookModule {
       case Cons(h, t) => foldLeft(t, f(z, h))(f)
     }
 
+    def length[A](l: List[A]) = foldLeft(l, 0)((n, a) => n + 1)
+
+    def foldRight[A,B](as: List[A], z: B)(f: (A,B) => B): B = {
+      val cl: (B=>B, A) => B => B = { (g, a) => b => g(f(a,b)) }
+
+      foldLeft[A, (B => B)](as, (b:B) => b)( cl )(z)
+    }
+
+    def map[A, B](as: List[A])(f: A => B): List[B] = foldLeft[A, List[B]](as, Nil) { (l, a) =>
+      flatMap(as)(a => Cons(f(a), Nil))
+    }
+
+    def flatMap[A, B](as: List[A])(f: A => List[B]): List[B] = foldLeft[A, List[B]](as, Nil) { (l, a) =>
+      append(l, f(a))
+    }
+
+    def filter[A](as: List[A])(f: A => Boolean): List[A] = foldLeft[A, List[A]](as, Nil) { (l, a) =>
+      flatMap(as)( a => if (f(a)) Cons(a, Nil) else Nil)
+    }
+
+    def zipWith[A, B, C](as: List[A], bs: List[B])(f: (A, B) => C): List[C] = (as -> bs) match {
+      case (Cons(a, at), Cons(b, bt)) => Cons(f(a,b), zipWith(at, bt)(f))
+      case _ => Nil
+    }
+
+    def reverse[A](l: List[A]): List[A] = foldRight[A, List[A]](l, Nil)((a: A, as: List[A]) => append(as, Cons(a, Nil)))
+
+    def hasSubSequence[A](sup: List[A], sub: List[A]): Boolean = (sup, sub) match {
+      case (_, Nil) => true
+      case (Nil, _) => false
+      case (Cons(p, ps), Cons(b, bs)) => (p == b && hasSubSequence(ps, bs)) || hasSubSequence(ps, sub)
+    }
   }
 
   def partial1[A,B,C](a: A, f: (A,B) => C): B => C = (b: B) => f(a,b)
@@ -48,4 +80,20 @@ class RedbookModule {
   def uncurry[A,B,C](f: A => B => C): (A, B) => C = (a: A, b: B) => f(a)(b)
   def compose[A,B,C](f: B => C, g: A => B): A => C = (a: A) => f(g(a))
 
+  sealed trait Tree[+A]
+  case class Leaf[A](value: A) extends Tree[A]
+  case class Branch[A](left: Tree[A], right: Tree[A]) extends Tree[A]
+
+  object Tree {
+
+    def fold[A,B](t: Tree[A])(l: A => B)(b: (B,B) => B): B = t match {
+      case Leaf(a) => l(a)
+      case Branch(ll, rr) => b(fold(ll)(l)(b), fold(rr)(l)(b))
+    }
+
+    def size[A](t: Tree[A]): Int = fold(t)(_ => 1)((l, r) => 1 + l + r)
+    def maximum(t: Tree[Int]): Int = fold(t)(i => i)((l, r) => l.max(r))
+    def depth[A](t: Tree[A]): Int = fold(t)(_ => 1)((l, r) => l.max(r))
+    def map[A,B](t: Tree[A])(f: A => B): Tree[B] = fold[A, Tree[B]](t)(a => Leaf(f(a)))((l, r) => Branch(l, r))
+  }
 }
