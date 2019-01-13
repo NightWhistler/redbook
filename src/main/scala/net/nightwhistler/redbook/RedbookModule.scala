@@ -96,4 +96,51 @@ object RedbookModule {
     def depth[A](t: Tree[A]): Int = fold(t)(_ => 1)((l, r) => l.max(r))
     def map[A,B](t: Tree[A])(f: A => B): Tree[B] = fold[A, Tree[B]](t)(a => Leaf(f(a)))((l, r) => Branch(l, r))
   }
+
+  sealed trait Option[+A] {
+    def map[B](f: A => B): Option[B] = flatMap(a => Some(f(a)))
+
+    def flatMap[B](f: A => Option[B]): Option[B] = this match {
+      case None => None
+      case Some(a) => f(a)
+    }
+
+    def getOrElse[B >: A](default: => B): B = this match {
+      case None => default
+      case Some(a) => a
+    }
+
+    def orElse[B >: A](ob: => Option[B]): Option[B] = map (Some(_)) getOrElse ob
+    def filter(f: A => Boolean): Option[A] = flatMap (a => if (f(a)) Some(a) else None)
+  }
+
+  object Option {
+    def lift[A,B](f: A => B): Option[A] => Option[B] = _ map f
+    def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for {
+        av <- a
+        bv <- b
+      } yield f(av,bv)
+
+    def sequence[A](as: List[Option[A]]): Option[List[A]] = traverse(as)(oa => oa)
+
+    def traverse[A,B](as: List[A])(f: A => Option[B]): Option[List[B]] = List.foldLeft[A, Option[List[B]]](as, Some(Nil)) { (l, a: A) =>
+      l.flatMap(ll => f(a).map(va => List.append(ll, Cons(va,Nil))))
+    }
+
+  }
+
+  case object None extends Option[Nothing]
+  case class Some[A](value: A) extends Option[A]
+
+  def mean(xs: Seq[Double]): Option[Double] =
+    if (xs.isEmpty) None else Some(xs.sum / xs.length)
+
+  def variance(xs: Seq[Double]): Option[Double] = mean(xs).flatMap { m =>
+    val variances: Seq[Double] = xs.map(x => math.pow(x - m, 2))
+    mean(variances)
+  }
+
+  def Try[A](a: => A): Option[A] =
+    try Some(a)
+    catch { case e: Exception => None }
 }
