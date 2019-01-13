@@ -117,9 +117,9 @@ object RedbookModule {
   object Option {
     def lift[A,B](f: A => B): Option[A] => Option[B] = _ map f
     def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = for {
-        av <- a
-        bv <- b
-      } yield f(av,bv)
+      av <- a
+      bv <- b
+    } yield f(av,bv)
 
     def sequence[A](as: List[Option[A]]): Option[List[A]] = traverse(as)(oa => oa)
 
@@ -130,7 +130,7 @@ object RedbookModule {
   }
 
   case object None extends Option[Nothing]
-  case class Some[A](value: A) extends Option[A]
+  case class Some[A](get: A) extends Option[A]
 
   def mean(xs: Seq[Double]): Option[Double] =
     if (xs.isEmpty) None else Some(xs.sum / xs.length)
