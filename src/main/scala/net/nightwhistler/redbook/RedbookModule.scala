@@ -132,13 +132,31 @@ object RedbookModule {
   case object None extends Option[Nothing]
   case class Some[A](get: A) extends Option[A]
 
-  def mean(xs: Seq[Double]): Option[Double] =
-    if (xs.isEmpty) None else Some(xs.sum / xs.length)
+  sealed trait Either[+E, +A] {
+    def map[B](f: A => B): Either[E, B] = flatMap(v => Right(f(v)))
 
-  def variance(xs: Seq[Double]): Option[Double] = mean(xs).flatMap { m =>
-    val variances: Seq[Double] = xs.map(x => math.pow(x - m, 2))
-    mean(variances)
+    def flatMap[EE >: E, B](f: A => Either[EE, B]): Either[EE, B] = this match {
+      case Left(v) => Left(v)
+      case Right(a) => f(a)
+    }
+
+    def orElse[EE >: E, B >: A](b: => Either[EE, B]): Either[EE, B] = this match {
+      case Left(v) => b
+      case Right(a) => Right(a)
+    }
+
+    def map2[EE >: E, B, C](b: Either[EE, B])(f: (A, B) => C): Either[EE, C] = flatMap(a => b.map(b => f(a,b)))
+
   }
+
+  object Either {
+    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = ???
+
+    def traverse[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] = ???
+  }
+
+  case class Left[+E](value: E) extends Either[E, Nothing]
+  case class Right[+A](value: A) extends Either[Nothing, A]
 
   def Try[A](a: => A): Option[A] =
     try Some(a)
