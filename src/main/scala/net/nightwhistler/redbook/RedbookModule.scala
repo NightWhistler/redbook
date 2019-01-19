@@ -124,7 +124,10 @@ object RedbookModule {
     def sequence[A](as: List[Option[A]]): Option[List[A]] = traverse(as)(oa => oa)
 
     def traverse[A,B](as: List[A])(f: A => Option[B]): Option[List[B]] = List.foldLeft[A, Option[List[B]]](as, Some(Nil)) { (l, a: A) =>
-      l.flatMap(ll => f(a).map(va => List.append(ll, Cons(va,Nil))))
+      for {
+        items <- l
+        newItem <- f(a)
+      } yield List.append(items, Cons(newItem, Nil))
     }
 
   }
@@ -150,9 +153,11 @@ object RedbookModule {
   }
 
   object Either {
-    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = ???
+    def sequence[E, A](es: List[Either[E, A]]): Either[E, List[A]] = traverse(es)(a => a)
 
-    def traverse[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] = ???
+    def traverse[E, A, B](as: List[A])(f: A => Either[E, B]): Either[E, List[B]] = List.foldLeft[A, Either[E, List[B]]](as, Right(Nil)) { (l: Either[E, List[B]], a:A) =>
+      l.map2(f(a))((ll, aa) => List.append(ll, Cons(aa, Nil)))
+    }
   }
 
   case class Left[+E](value: E) extends Either[E, Nothing]
