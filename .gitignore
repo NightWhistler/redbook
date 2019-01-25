@@ -44,4 +44,6 @@ application.conf
 .ensime_cache
 ensime.sbt
 .tags
+.metals
+.bloop
 
