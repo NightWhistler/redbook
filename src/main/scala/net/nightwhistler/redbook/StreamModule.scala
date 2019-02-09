@@ -73,9 +73,15 @@ object StreamModule {
       case _ => None
     }
 
-    def hasSubSequence[A](sub: Stream[A]): Boolean = ???
+    def hasSubsequence[A](s: Stream[A]): Boolean =
+      tails exists (_ startsWith s)
+
     def startsWith[A](s: Stream[A]): Boolean = zipWith(s)( (a, b) => a == b ).forAll(b => b)
 
+    def tails: Stream[Stream[A]] = unfold(this) {
+      case Empty => None
+      case Cons(h, t) => Some((t(), t()))
+    }
   }
   case object Empty extends Stream[Nothing]
   case class Cons[+A](h: () => A, t: () => Stream[A]) extends Stream[A]
