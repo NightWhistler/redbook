@@ -129,6 +129,9 @@ object Candy {
   def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = {
     val mods: List[State[Machine, Unit]] = inputs.map( i => State.modify(applyInput(i)))
     val sequenced: State[Machine, List[Unit]] = State.sequence(mods)
-    sequenced.flatMap( _ => State.get.map( m => (m.candies, m.coins)))
+    for {
+      _ <- sequenced
+      s <- State.get
+    } yield ((s.candies, s.coins))
   }
 }
