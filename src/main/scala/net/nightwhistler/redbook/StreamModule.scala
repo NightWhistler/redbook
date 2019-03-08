@@ -73,6 +73,10 @@ object StreamModule {
       case _ => None
     }
 
+    // special case of `zipWith`
+    def zip[B](s2: Stream[B]): Stream[(A,B)] =
+      zipWith(s2)((_,_))
+
     def hasSubsequence[A](s: Stream[A]): Boolean =
       tails exists (_ startsWith s)
 
