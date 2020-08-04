@@ -2,7 +2,7 @@
 name := "redbook-excercises"
 version := "0.1"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.8"
 
 libraryDependencies += {
   val version = scalaBinaryVersion.value match {
